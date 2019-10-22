@@ -1,0 +1,11 @@
+#contactList {
+    position: relative;
+    width: 500px;
+    height: 600px;
+    overflow: auto;
+    border: thin solid black;
+}
+
+.media-content textarea {
+    width: 100%;
+}
