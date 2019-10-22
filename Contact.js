@@ -1,7 +1,9 @@
 class Contact {
 
     // Never use the constructor directly. Always need to use
-    // the async factory method.
+    // the async factory method. Since we are most often creating
+    // the object from a json object returned from server, we wrote
+    // the constructor to expect object state to be given as such.
 
     constructor(obj_json) {
         this.id = obj_json.id;
@@ -11,6 +13,10 @@ class Contact {
         this.phone = obj_json.phone;
         this.notes = obj_json.notes;
     }
+
+    // update writes the current state of the object back to the
+    // server. Should be called after one or more of the object fields are
+    // changed. 
 
     async update() {
         let data_string = JSON.stringify({
@@ -32,9 +38,23 @@ class Contact {
             data: data_string
         })
 
-        return new Contact(response.result.posted);
+        // Update local structure with current state from server.
+        // Shouldn't really need to do this if things actually worked but 
+        // can't hurt.
+
+        this.id = response.result.posted.id;
+        this.first = response.result.posted.first;
+        this.last = response.result.posted.last;
+        this.email = response.result.posted.email;
+        this.phone = response.result.posted.phone;
+        this.notes = response.result.posted.notes;
+
+        // Return object now updated.
+        return this;
     }
 }
+
+// Retrieves array of all contact ids
 
 Contact.findAll = async () => {
     let response = await $.ajax("http://localhost:3000/public/contacts/", {type: "GET", dataType: "json"});
@@ -42,15 +62,23 @@ Contact.findAll = async () => {
     return response.result;
 }
 
-Contact.find = async (id) => {
-    let response = await $.ajax("http://localhost:3000/public/contacts/"+id,
-    {
-        type: "GET",
-        dataTyoe: "json"
-    });
+// Retrieves Contact object given id
 
-    return new Contact(response.result);
+Contact.find = async (id) => {
+    try {
+        let response = await $.ajax("http://localhost:3000/public/contacts/"+id,
+        {
+            type: "GET",
+            dataType: "json"
+        });
+
+        return new Contact(response.result);
+    } catch {
+        throw "No contact with id: " + id;
+    }
 };
+
+// Creates new contact
 
 Contact.create = async (first, last, email, phone, notes) => {
     let id = Contact.generate_unique_id();
